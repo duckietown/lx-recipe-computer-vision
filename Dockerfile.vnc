@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1.4
 # parameters
-ARG EXERCISE_NAME="<LX_NAME_HERE>"
-ARG DESCRIPTION="VNC - <DESCRIPTION_HERE>"
-ARG MAINTAINER="<YOUR_FULL_NAME> (<YOUR_EMAIL_ADDRESS>)"
+ARG EXERCISE_NAME="lx-computer-vision"
+ARG DESCRIPTION="Learning Experience about image processing and projective geometry"
+ARG MAINTAINER="Liam P"
 
 # ==================================================>
 # ==> Do not change the code below this line
