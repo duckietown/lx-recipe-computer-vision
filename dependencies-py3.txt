@@ -1,1 +1,3 @@
 # LIST YOUR PYTHON3 PACKAGES HERE
+lib-dt-computer-vision==0.1.13
+ipympl
