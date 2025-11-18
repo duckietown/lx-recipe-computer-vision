@@ -83,7 +83,7 @@ Visualization Manager:
         Shaft Length: 0.5
         Shaft Radius: 0.05000000074505806
         Value: Axes
-      Topic: /agent/encoder_localization
+      Topic: /agent/pose
       Unreliable: false
       Value: true
     - Class: rviz/Image
