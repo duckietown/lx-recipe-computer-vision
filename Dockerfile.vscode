@@ -73,12 +73,15 @@ RUN python3 -m pip install -r /tmp/dependencies-py3.txt
 COPY --from=ros2commons /code/install/duckietown_msgs /opt/duckietown/ros2/duckietown_msgs
 
 # copy the source code (recipe)
+# NOTE: `dts code editor` bind-mounts the LX over ${REPO_PATH}, which hides this copy; a second copy
+# outside the mount point keeps the recipe helpers (lx_ros2_tools, ...) importable from the notebooks.
 COPY --from=recipe ./packages "${REPO_PATH}/packages"
+COPY --from=recipe ./packages /opt/duckietown/lx-recipe/packages
 
 # ROS 2 environment for every process in the editor, including Jupyter kernels
 ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp \
     AMENT_PREFIX_PATH="/opt/duckietown/ros2/duckietown_msgs:/opt/ros/jazzy" \
-    PYTHONPATH="${REPO_PATH}/packages:${REPO_PATH}/packages/lx_ros2_tools:/opt/duckietown/ros2/duckietown_msgs/lib/python3.12/site-packages:/opt/ros/jazzy/lib/python3.12/site-packages:${PYTHONPATH}" \
+    PYTHONPATH="${REPO_PATH}/packages:/opt/duckietown/lx-recipe/packages:/opt/duckietown/lx-recipe/packages/lx_ros2_tools:/opt/duckietown/ros2/duckietown_msgs/lib/python3.12/site-packages:/opt/ros/jazzy/lib/python3.12/site-packages:${PYTHONPATH}" \
     LD_LIBRARY_PATH="/opt/duckietown/ros2/duckietown_msgs/lib:/opt/ros/jazzy/opt/zenoh_cpp_vendor/lib:/opt/ros/jazzy/lib/aarch64-linux-gnu:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib:${LD_LIBRARY_PATH}" \
     PATH="/opt/ros/jazzy/bin:${PATH}"
 
