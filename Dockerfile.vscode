@@ -15,6 +15,8 @@ ARG LAUNCHER=default
 
 # the ROS 2 image that carries the compiled Duckietown messages (copied into the editor below)
 FROM ${DOCKER_REGISTRY}/duckietown/dt-ros2-commons:${BASE_TAG} as ros2commons
+# the commons workspace is a colcon --symlink-install: dereference the links so the copy below is self-contained
+RUN cp -rL /code/install/duckietown_msgs /tmp/duckietown_msgs_install
 
 # define base image
 FROM ${DOCKER_REGISTRY}/duckietown/${BASE_IMAGE}:${BASE_TAG} as base
@@ -70,7 +72,7 @@ COPY --from=recipe ./dependencies-py3.* "/tmp/"
 RUN python3 -m pip install -r /tmp/dependencies-py3.txt
 
 # Duckietown ROS 2 messages, compiled in dt-ros2-commons for the same Jazzy/noble/python
-COPY --from=ros2commons /code/install/duckietown_msgs /opt/duckietown/ros2/duckietown_msgs
+COPY --from=ros2commons /tmp/duckietown_msgs_install /opt/duckietown/ros2/duckietown_msgs
 
 # copy the source code (recipe)
 # NOTE: `dts code editor` bind-mounts the LX over ${REPO_PATH}, which hides this copy; a second copy
