@@ -13,6 +13,9 @@ ARG BASE_IMAGE=dt-vscode
 ARG BASE_TAG=${DISTRO}-${ARCH}
 ARG LAUNCHER=default
 
+# the ROS 2 image that carries the compiled Duckietown messages (copied into the editor below)
+FROM ${DOCKER_REGISTRY}/duckietown/dt-ros2-commons:${BASE_TAG} as ros2commons
+
 # define base image
 FROM ${DOCKER_REGISTRY}/duckietown/${BASE_IMAGE}:${BASE_TAG} as base
 
@@ -33,15 +36,51 @@ ARG TARGETVARIANT
 # check build arguments
 RUN dt-build-env-check "${EXERCISE_NAME}" "${MAINTAINER}" "${DESCRIPTION}"
 
-# install apt dependencies
-COPY --from=recipe ./dependencies-apt.txt "/tmp/"
-RUN dt-apt-install /tmp/dependencies-apt.txt
+# define/create repository path
+ARG REPO_PATH="${SOURCE_DIR}/${EXERCISE_NAME}"
+RUN mkdir -p "${REPO_PATH}"
+WORKDIR "${REPO_PATH}"
+
+# make code-server open the LX folder by default
+ENV VSCODE_PATH="${REPO_PATH}" \
+    ROS2_DISTRO=jazzy \
+    COLCON_WS=/code \
+    LANG=C.UTF-8
+
+# ROS 2 apt repository (Jazzy on noble)
+ARG ROS_APT_SOURCE_VERSION=1.3.0
+ARG ROS_APT_SOURCE_SHA256=f31d84adf5054c7d60ded0e82c0f776a77ea33af53d08f40b9ad7c94cca55296
+RUN . /etc/os-release && \
+    test "${VERSION_CODENAME}" = noble && \
+    curl --fail --location --silent --show-error \
+        "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.${VERSION_CODENAME}_all.deb" \
+        --output /tmp/ros2-apt-source.deb && \
+    echo "${ROS_APT_SOURCE_SHA256}  /tmp/ros2-apt-source.deb" | sha256sum --check - && \
+    dpkg --install /tmp/ros2-apt-source.deb && \
+    rm /tmp/ros2-apt-source.deb
+
+# install apt dependencies (ROS 2 for the notebooks and the editor terminal)
+COPY --from=recipe ./dependencies-apt.vscode.txt "/tmp/"
+RUN dt-apt-install /tmp/dependencies-apt.vscode.txt
 
 # install python3 dependencies
-ARG PIP_INDEX_URL="https://pypi.org/simple/"
+ARG PIP_INDEX_URL="https://pypi.org/simple"
 ENV PIP_INDEX_URL=${PIP_INDEX_URL}
 COPY --from=recipe ./dependencies-py3.* "/tmp/"
 RUN python3 -m pip install -r /tmp/dependencies-py3.txt
+
+# Duckietown ROS 2 messages, compiled in dt-ros2-commons for the same Jazzy/noble/python
+COPY --from=ros2commons /code/install/duckietown_msgs /opt/duckietown/ros2/duckietown_msgs
+
+# copy the source code (recipe)
+COPY --from=recipe ./packages "${REPO_PATH}/packages"
+
+# ROS 2 environment for every process in the editor, including Jupyter kernels
+ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp \
+    AMENT_PREFIX_PATH="/opt/duckietown/ros2/duckietown_msgs:/opt/ros/jazzy" \
+    PYTHONPATH="${REPO_PATH}/packages:${REPO_PATH}/packages/lx_ros2_tools:/opt/duckietown/ros2/duckietown_msgs/lib/python3.12/site-packages:/opt/ros/jazzy/lib/python3.12/site-packages:${PYTHONPATH}" \
+    LD_LIBRARY_PATH="/opt/duckietown/ros2/duckietown_msgs/lib:/opt/ros/jazzy/opt/zenoh_cpp_vendor/lib:/opt/ros/jazzy/lib/aarch64-linux-gnu:/opt/ros/jazzy/lib/x86_64-linux-gnu:/opt/ros/jazzy/lib:${LD_LIBRARY_PATH}" \
+    PATH="/opt/ros/jazzy/bin:${PATH}"
 
 # store module metadata
 LABEL org.duckietown.label.module.type="exercise-vscode" \
@@ -55,10 +94,14 @@ LABEL org.duckietown.label.module.type="exercise-vscode" \
     org.duckietown.label.base.image="${BASE_IMAGE}" \
     org.duckietown.label.base.tag="${BASE_TAG}" \
     org.duckietown.label.maintainer="${MAINTAINER}"
-
 # <== Do not change the code above this line
 # <==================================================
 
-# setup vscode
+# setup vscode (open README, widget sources, ROS 2 in the terminal)
 COPY --from=recipe assets/vscode/setup.sh /tmp/vscode_setup.sh
-RUN /tmp/vscode_setup.sh
+RUN chmod +x /tmp/vscode_setup.sh && /tmp/vscode_setup.sh
+
+# prepare colcon output directories for the user chosen by dt-vscode at runtime
+COPY --from=recipe assets/vscode/launch.sh /usr/local/bin/dt-launcher-ros2-vscode
+RUN chmod +x /usr/local/bin/dt-launcher-ros2-vscode
+ENV DT_LAUNCHER=ros2-vscode

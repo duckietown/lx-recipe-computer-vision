@@ -1,0 +1,11 @@
+# ROS 2 (Jazzy) inside the editor: notebooks and the integrated terminal talk to the robot
+ros-jazzy-ros-base
+ros-jazzy-rclpy
+ros-jazzy-rmw-zenoh-cpp
+ros-jazzy-std-msgs
+ros-jazzy-std-srvs
+ros-jazzy-sensor-msgs
+ros-jazzy-geometry-msgs
+ros-jazzy-nav-msgs
+ros-jazzy-visualization-msgs
+python3-colcon-common-extensions
