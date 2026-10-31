@@ -18,6 +18,6 @@ if [[ -f "${COLCON_WS}/install/setup.bash" ]]; then
 fi
 # connect `ros2 ...` CLI tools to the robot's zenoh router when a robot name is known
 if [[ -z "${ZENOH_CONFIG_OVERRIDE:-}" && -n "${VEHICLE_NAME:-}" ]]; then
-    export ZENOH_CONFIG_OVERRIDE="connect/endpoints=[\"tcp/${VEHICLE_NAME}.local:7447\"]"
+    export ZENOH_CONFIG_OVERRIDE="mode=\"client\";connect/endpoints=[\"tcp/${VEHICLE_NAME}.local:7447\"]"
 fi
 EOF

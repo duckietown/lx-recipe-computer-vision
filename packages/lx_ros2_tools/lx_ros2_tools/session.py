@@ -21,9 +21,9 @@ def _configure_env(robot_name: str, zenoh_endpoint: Optional[str]) -> None:
     os.environ.setdefault("RMW_IMPLEMENTATION", "rmw_zenoh_cpp")
     if "ZENOH_CONFIG_OVERRIDE" not in os.environ:
         endpoint = zenoh_endpoint or f"tcp/{robot_name}.local:{_ROUTER_PORT}"
-        os.environ["ZENOH_CONFIG_OVERRIDE"] = f'connect/endpoints=["{endpoint}"]'
-    # do not block the notebook if the router is not up yet
-    os.environ.setdefault("ZENOH_ROUTER_CHECK_ATTEMPTS", "0")
+        # client mode: everything is routed by the robot's router (a peer session would try to link
+        # directly to the robot's nodes, which is unreachable from a laptop or from inside docker)
+        os.environ["ZENOH_CONFIG_OVERRIDE"] = f'mode="client";connect/endpoints=["{endpoint}"]'
 
 
 class RosSession:
