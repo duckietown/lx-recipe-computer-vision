@@ -50,8 +50,8 @@ exposes the `std_srvs/Trigger` services `vls_node/{init,calibrate,start,stop}` a
 
 The ROS 2 stack must be running on the robot (real or virtual):
 
-    dts stack up -R ROBOT ros2/duckiebot
-    dts stack up -R ROBOT ros2-core/default
+    dts stack up -H ROBOT ros2/duckiebot
+    dts stack up -H ROBOT ros2-core/default
 
 The workbench container connects to the robot's zenoh router (`tcp/ROBOT.local:7447`); the launcher sets
 `ZENOH_CONFIG_OVERRIDE` from `VEHICLE_NAME`.
