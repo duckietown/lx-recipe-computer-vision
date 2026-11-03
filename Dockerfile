@@ -9,7 +9,7 @@ ARG MAINTAINER="Liam P"
 ARG ARCH
 ARG DISTRO=ente
 ARG DOCKER_REGISTRY=docker.io
-ARG BASE_IMAGE=dt-ros-commons
+ARG BASE_IMAGE=dt-ros2-commons
 ARG BASE_TAG=${DISTRO}-${ARCH}
 ARG LAUNCHER=default
 
@@ -34,7 +34,7 @@ ARG TARGETVARIANT
 RUN dt-build-env-check "${EXERCISE_NAME}" "${MAINTAINER}" "${DESCRIPTION}"
 
 # define/create repository path
-ARG REPO_PATH="${CATKIN_WS_DIR}/src/${EXERCISE_NAME}"
+ARG REPO_PATH="${SOURCE_DIR}/${EXERCISE_NAME}"
 ARG LAUNCH_PATH="${LAUNCH_DIR}/${EXERCISE_NAME}"
 RUN mkdir -p "${REPO_PATH}" "${LAUNCH_PATH}"
 WORKDIR "${REPO_PATH}"
@@ -70,10 +70,12 @@ COPY --from=meat ./assets/. "${REPO_PATH}/assets/"
 # copy the source code (meat)
 COPY --from=meat ./packages/. "${REPO_PATH}/packages/"
 
-# build packages
-RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
-  catkin build \
-    --workspace ${CATKIN_WS_DIR}/
+# build packages (ROS 2 / colcon)
+RUN . /opt/ros/${ROS2_DISTRO}/setup.sh && \
+  dt-colcon-build ${COLCON_WS}
+
+# make plain python packages under `packages/` importable (notebook code, solutions)
+ENV PYTHONPATH="${REPO_PATH}/packages:${PYTHONPATH}"
 
 # install launcher scripts
 COPY --from=recipe ./launchers/. "${LAUNCH_PATH}/"
