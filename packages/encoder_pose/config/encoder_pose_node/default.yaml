@@ -1,0 +1,4 @@
+/**:
+  ros__parameters:
+    # rate [Hz] at which the estimated pose (nav_msgs/Odometry on ~/pose) is published
+    publish_rate: 2.0
